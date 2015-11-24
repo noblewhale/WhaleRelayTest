@@ -99,6 +99,7 @@ public class NetworkManager : MonoBehaviour
     [RPC]
     void setClientGroupOnClient(int group)
     {
+        Debug.Log("client received group: " + group);
         clientGroup = group;
 
         NetworkViewID playerID = Network.AllocateViewID();
