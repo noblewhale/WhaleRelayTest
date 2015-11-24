@@ -16,8 +16,8 @@ public class NetworkManager : MonoBehaviour
         {
             if (arg == "-batchmode")
             {
-                Network.InitializeServer(10, 45678, false);
-                Network.InitializeServer(10, 45679, false);
+                Network.InitializeServer(10, 45685, false);
+                Network.InitializeServer(10, 45690, false);
             }
         }
 	}
@@ -41,6 +41,7 @@ public class NetworkManager : MonoBehaviour
         server = networkView.owner;
 
         NetworkViewID playerID = Network.AllocateViewID();
+        networkView.RPC("spawnObject", server, playerID);
         networkView.RPC2("spawnPlayer", RPCMode.All, playerID);
     }
 
@@ -68,5 +69,18 @@ public class NetworkManager : MonoBehaviour
     {
         Debug.Log("received rpc at relay, sending back out to clients: " + methodName);
         networkView.RPC(methodName, RPCMode.Others, viewID);
+    }
+
+    [RPC]
+    void spawnObject(NetworkViewID viewID)
+    {
+        GameObject dummy = new GameObject();
+        dummy.AddComponent<NetworkView>();
+        dummy.networkView.viewID = viewID;
+    }
+
+    void OnApplicationQuit()
+    {
+        Network.Disconnect();
     }
 }
