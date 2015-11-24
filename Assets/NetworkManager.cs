@@ -38,19 +38,15 @@ public class NetworkManager : MonoBehaviour
     {
         Debug.Log("connected");
 
-        NetworkViewID playerID = Network.AllocateViewID();
-        
-        GameObject player = GameObject.Instantiate(playerPrefab) as GameObject;
-        player.networkView.viewID = playerID;
-        
         server = networkView.owner;
 
-        networkView.RPC2("testRPC", RPCMode.All, 666);
+        NetworkViewID playerID = Network.AllocateViewID();
+        networkView.RPC2("spawnPlayer", RPCMode.All, playerID);
     }
 
     void OnPlayerConnected()
     {
-        Debug.Log("player connected");
+        Debug.Log("client connected");
     }
 
     void OnServerInitialized()
@@ -59,15 +55,18 @@ public class NetworkManager : MonoBehaviour
     }
 
     [RPC]
-    void testRPC(int arg)
+    void spawnPlayer(NetworkViewID viewID)
     {
-        Debug.Log("received test rpc: " + arg);
+        Debug.Log("received test rpc: " + viewID);
+
+        GameObject player = GameObject.Instantiate(playerPrefab) as GameObject;
+        player.networkView.viewID = viewID;
     }
 
     [RPC]
-    void relay(string methodName, int data)
+    void relay(string methodName, NetworkViewID viewID)
     {
         Debug.Log("received rpc at relay, sending back out to clients: " + methodName);
-        networkView.RPC(methodName, RPCMode.Others, data);
+        networkView.RPC(methodName, RPCMode.Others, viewID);
     }
 }
