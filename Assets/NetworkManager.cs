@@ -16,8 +16,8 @@ public class NetworkManager : MonoBehaviour
         {
             if (arg == "-batchmode")
             {
-                Network.InitializeServer(10, 45678, true);
-                Network.InitializeServer(10, 45679, true);
+                Network.InitializeServer(10, 45678, false);
+                Network.InitializeServer(10, 45679, false);
             }
         }
 	}
