@@ -26,11 +26,11 @@ public class NetworkManager : MonoBehaviour
     {
         if (GUI.Button(new Rect(0, 10, 150, 100), "Connect 1"))
         {
-            Network.Connect("50.57.111.104", 45678);
+            Network.Connect("50.57.111.104", 45685);
         }
         if (GUI.Button(new Rect(0, 120, 150, 100), "Connect 2"))
         {
-            Network.Connect("50.57.111.104", 45679);
+            Network.Connect("50.57.111.104", 45690);
         }
     }
 
