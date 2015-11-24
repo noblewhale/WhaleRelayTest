@@ -10,6 +10,7 @@ public class NetworkManager : MonoBehaviour
     public GameObject playerPrefab;
 
     // Only used on clients
+    [NonSerialized]
     public int clientGroup = -1;
 
     // Only used on server. TODO: Better
