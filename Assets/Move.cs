@@ -6,13 +6,16 @@ public class Move : MonoBehaviour
 	
 	void Update() 
     {
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (networkView.isMine)
         {
-            transform.position += Vector3.up;
-        }
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            transform.position += Vector3.down;
+            if (Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                transform.position += Vector3.up;
+            }
+            else if (Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                transform.position += Vector3.down;
+            }
         }
 	}
 }
