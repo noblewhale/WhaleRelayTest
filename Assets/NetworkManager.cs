@@ -1,12 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+using System.Collections.Generic;
 
 public class NetworkManager : MonoBehaviour 
 {
     public static NetworkPlayer server;
 
     public GameObject playerPrefab;
+
+    // Only used on clients
+    public int clientGroup;
+
+    // Only used on server. TODO: Better
+    public int nextClientGroup = 1;
+
+    Dictionary<NetworkPlayer, int> clientGroups;
 
 	void Start () 
     {
@@ -16,8 +25,7 @@ public class NetworkManager : MonoBehaviour
         {
             if (arg == "-batchmode")
             {
-                Network.InitializeServer(10, 45685, false);
-                Network.InitializeServer(10, 45690, false);
+                Network.InitializeServer(10, 45685, true);
             }
         }
 	}
@@ -30,7 +38,8 @@ public class NetworkManager : MonoBehaviour
         }
         if (GUI.Button(new Rect(0, 120, 150, 100), "Connect 2"))
         {
-            Network.Connect("50.57.111.104", 45690);
+            clientGroup = 1;
+            Network.Connect("50.57.111.104", 45685);
         }
     }
 
@@ -40,9 +49,14 @@ public class NetworkManager : MonoBehaviour
 
         server = networkView.owner;
 
-        NetworkViewID playerID = Network.AllocateViewID();
-        networkView.RPC("spawnObject", server, playerID);
-        networkView.RPC2("spawnPlayer", RPCMode.All, playerID);
+        if (clientGroup == -1)
+        {
+            networkView.RPC("getClientGroupFromRelay", server);
+        }
+        else
+        {
+            networkView.RPC("setClientGroupOnRelay", server, clientGroup);
+        }
     }
 
     void OnPlayerConnected()
@@ -68,15 +82,47 @@ public class NetworkManager : MonoBehaviour
     void relay(string methodName, NetworkViewID viewID)
     {
         Debug.Log("received rpc at relay, sending back out to clients: " + methodName);
+
         networkView.RPC(methodName, RPCMode.Others, viewID);
     }
 
+    // Called by Owner, received by Server
     [RPC]
-    void spawnObject(NetworkViewID viewID)
+    void spawnObject(NetworkViewID viewID, NetworkMessageInfo info)
     {
         GameObject dummy = new GameObject();
         dummy.AddComponent<NetworkView>();
         dummy.networkView.viewID = viewID;
+        dummy.networkView.group = clientGroups[info.sender];
+    }
+
+    [RPC]
+    void setClientGroupOnClient(int group)
+    {
+        clientGroup = group;
+
+        NetworkViewID playerID = Network.AllocateViewID();
+        networkView.RPC("spawnObject", server, playerID);
+        networkView.RPC2("spawnPlayer", RPCMode.All, playerID);
+    }
+
+    [RPC]
+    void setClientGroupOnRelay(int group, NetworkMessageInfo info)
+    {
+        clientGroups[info.sender] = group;
+
+        // We send it back so that the client knows we have received it and it's ok to start spawning objects and whatnot
+        networkView.RPC("setClientGroupOnClient", info.sender, nextClientGroup);
+    }
+
+    [RPC]
+    void getClientGroupFromRelay(NetworkMessageInfo info)
+    {
+        clientGroups[info.sender] = nextClientGroup;
+
+        networkView.RPC("setClientGroupOnClient", info.sender, nextClientGroup);
+
+        nextClientGroup++;
     }
 
     void OnApplicationQuit()
