@@ -4,6 +4,9 @@ using System;
 
 public class NetworkManager : MonoBehaviour 
 {
+    public static NetworkPlayer server;
+
+    public GameObject playerPrefab;
 
 	void Start () 
     {
@@ -35,6 +38,13 @@ public class NetworkManager : MonoBehaviour
     {
         Debug.Log("connected");
 
+        NetworkViewID playerID = Network.AllocateViewID();
+        
+        GameObject player = GameObject.Instantiate(playerPrefab) as GameObject;
+        player.networkView.viewID = playerID;
+        
+        server = networkView.owner;
+
         networkView.RPC2("testRPC", RPCMode.All, 666);
     }
 
@@ -58,6 +68,6 @@ public class NetworkManager : MonoBehaviour
     void relay(string methodName, int data)
     {
         Debug.Log("received rpc at relay, sending back out to clients: " + methodName);
-        networkView.RPC(methodName, RPCMode.All, data);
+        networkView.RPC(methodName, RPCMode.Others, data);
     }
 }
