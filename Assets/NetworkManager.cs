@@ -15,7 +15,7 @@ public class NetworkManager : MonoBehaviour
     // Only used on server. TODO: Better
     public int nextClientGroup = 1;
 
-    Dictionary<NetworkPlayer, int> clientGroups;
+    Dictionary<NetworkPlayer, int> clientGroups = new Dictionary<NetworkPlayer,int>();
 
 	void Start () 
     {
