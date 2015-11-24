@@ -93,7 +93,16 @@ public class NetworkManager : MonoBehaviour
         GameObject dummy = new GameObject();
         dummy.AddComponent<NetworkView>();
         dummy.networkView.viewID = viewID;
-        dummy.networkView.group = clientGroups[info.sender];
+
+        // Disable network view for every player that is not in the sender's group
+        int group = clientGroups[info.sender];
+        foreach (KeyValuePair<NetworkPlayer, int> playerAndGroup in clientGroups)
+        {
+            if (playerAndGroup.Value != group)
+            {
+                dummy.networkView.SetScope(playerAndGroup.Key, false);
+            }
+        }
     }
 
     [RPC]
@@ -112,8 +121,7 @@ public class NetworkManager : MonoBehaviour
     {
         clientGroups[info.sender] = group;
 
-        // We send it back so that the client knows we have received it and it's ok to start spawning objects and whatnot
-        networkView.RPC("setClientGroupOnClient", info.sender, nextClientGroup);
+        setClientGroupAndScope(info.sender, group);
     }
 
     [RPC]
@@ -121,9 +129,23 @@ public class NetworkManager : MonoBehaviour
     {
         clientGroups[info.sender] = nextClientGroup;
 
-        networkView.RPC("setClientGroupOnClient", info.sender, nextClientGroup);
+        setClientGroupAndScope(info.sender, nextClientGroup);
 
         nextClientGroup++;
+    }
+
+    void setClientGroupAndScope(NetworkPlayer client, int group)
+    {
+        // Don't send updates from existing network views for the new player
+        NetworkView[] everyNetworkView = GameObject.FindObjectsOfType<NetworkView>();
+        foreach (NetworkView view in everyNetworkView)
+        {
+            if (view == networkView) continue; // Never disable the NetworkManager's view for any clients
+
+            view.SetScope(client, false);
+        }
+
+        networkView.RPC("setClientGroupOnClient", client,  group);
     }
 
     void OnApplicationQuit()
